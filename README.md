@@ -1,6 +1,6 @@
 # homebrew-tap
 
-Homebrew tap for installing the `ktsearch` CLI.
+Homebrew tap for installing CLI tools published by Jilles van Gurp.
 
 ## Install
 
@@ -10,7 +10,7 @@ Tap this repository:
 brew tap jillesvangurp/tap https://github.com/jillesvangurp/homebrew-tap
 ```
 
-Then install `ktsearch`:
+Then install a formula, for example `ktsearch`:
 
 ```bash
 brew install ktsearch
@@ -24,9 +24,15 @@ You can also install it in one step without tapping first:
 brew install jillesvangurp/tap/ktsearch
 ```
 
-## What gets installed
+Additional formulae can be added later under [`Formula/`](/Users/jillesvangurp/git/homebrew-tap/Formula) without changing how users tap the repository.
 
-The formula installs the native `ktsearch` binary from the GitHub release assets for:
+## Current formulae
+
+- `ktsearch`
+
+## Formula updates
+
+Each formula can pull native binaries from its upstream GitHub releases. For `ktsearch`, the formula installs:
 
 - macOS Apple Silicon
 - macOS Intel
@@ -37,35 +43,50 @@ It also installs generated shell completions for:
 - Bash
 - Zsh
 
-The helper scripts shipped in the release archive are installed to:
+For `ktsearch`, the helper scripts shipped in the release archive are installed to:
 
 ```bash
 $(brew --prefix)/share/ktsearch
 ```
 
-## Updating the formula
+## Adding another formula
 
-When a new `ktsearch` release is published:
+To add another tool later:
 
-1. Update the version in `Formula/ktsearch.rb`.
-2. Replace the download URLs and SHA-256 checksums for each platform.
-3. Commit and push the changes to this tap repository.
+1. Add a new formula file under [`Formula/`](/Users/jillesvangurp/git/homebrew-tap/Formula).
+2. Add a matching config file under [`formulae/`](/Users/jillesvangurp/git/homebrew-tap/formulae).
+3. Make sure the upstream project publishes release assets with stable names and GitHub SHA-256 digests.
+4. Commit and push the changes to this tap repository.
 
-You can do that manually with:
+## Updating formulae
+
+When a new release is published for a configured tool, update all formulae with:
 
 ```bash
-python3 scripts/update_ktsearch_tap.py --latest
+python3 scripts/update_formulae.py --latest
+```
+
+To update only one formula:
+
+```bash
+python3 scripts/update_formulae.py --formula ktsearch --latest
+```
+
+To pin a specific tag for one formula:
+
+```bash
+python3 scripts/update_formulae.py --formula ktsearch --tag 2.8.7
 ```
 
 ## GitHub Actions automation
 
-This repo includes [`.github/workflows/update-ktsearch-tap.yml`](/Users/jillesvangurp/git/homebrew-tap/.github/workflows/update-ktsearch-tap.yml), which:
+This repo includes [`.github/workflows/update-formulae.yml`](/Users/jillesvangurp/git/homebrew-tap/.github/workflows/update-formulae.yml), which:
 
 - runs daily
 - can also be triggered manually from the Actions tab
-- checks the latest `jillesvangurp/kt-search` release
-- updates `Formula/ktsearch.rb` if the version changed
+- checks the latest releases for every configured formula in [`formulae/`](/Users/jillesvangurp/git/homebrew-tap/formulae)
+- updates matching files in [`Formula/`](/Users/jillesvangurp/git/homebrew-tap/Formula) if versions changed
 - runs `brew style`
 - commits and pushes the formula update automatically
 
-The updater logic lives in [`scripts/update_ktsearch_tap.py`](/Users/jillesvangurp/git/homebrew-tap/scripts/update_ktsearch_tap.py).
+The generic updater logic lives in [`scripts/update_formulae.py`](/Users/jillesvangurp/git/homebrew-tap/scripts/update_formulae.py). The compatibility wrapper for the existing `ktsearch` workflow lives in [`scripts/update_ktsearch_tap.py`](/Users/jillesvangurp/git/homebrew-tap/scripts/update_ktsearch_tap.py).

@@ -1,0 +1,10 @@
+{
+  "formula": "ktsearch",
+  "source_repo": "jillesvangurp/kt-search",
+  "formula_path": "Formula/ktsearch.rb",
+  "asset_templates": {
+    "darwin-arm64": "ktsearch-{version}-darwin-arm64.tar.gz",
+    "darwin-x64": "ktsearch-{version}-darwin-x64.tar.gz",
+    "linux-x64": "ktsearch-{version}-linux-x64.tar.gz"
+  }
+}
