@@ -1,0 +1,55 @@
+name: Update ktsearch tap
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 6 * * *"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-ktsearch-tap
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: macos-latest
+    steps:
+      - name: Check out tap repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Update formula from latest ktsearch release
+        run: python3 scripts/update_ktsearch_tap.py --latest
+
+      - name: Validate formula style
+        env:
+          HOMEBREW_FORCE_VENDOR_RUBY: "1"
+          HOMEBREW_NO_AUTO_UPDATE: "1"
+        run: brew style Formula/ktsearch.rb
+
+      - name: Check for changes
+        id: changes
+        run: |
+          if git diff --quiet; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Commit and push update
+        if: steps.changes.outputs.changed == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          version="$(ruby -ne 'puts $1 if $_ =~ /^\s*version \"([^\"]+)\"$/' Formula/ktsearch.rb)"
+          git add Formula/ktsearch.rb
+          git commit -m "Update ktsearch formula to ${version}"
+          git push
