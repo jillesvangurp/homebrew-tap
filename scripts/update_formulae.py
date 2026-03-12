@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import argparse
 import json
+import os
 import re
 import subprocess
 import sys
@@ -34,15 +35,25 @@ def parse_args() -> argparse.Namespace:
 
 
 def fetch_json(url: str) -> dict:
+    headers = [
+        "Accept: application/vnd.github+json",
+        "User-Agent: homebrew-tap-formula-update",
+    ]
+    github_token = os.environ.get("GITHUB_TOKEN")
+    if github_token:
+        headers.extend(
+            [
+                f"Authorization: Bearer {github_token}",
+                "X-GitHub-Api-Version: 2022-11-28",
+            ]
+        )
+
     try:
         result = subprocess.run(
             [
                 "curl",
                 "-fsSL",
-                "-H",
-                "Accept: application/vnd.github+json",
-                "-H",
-                "User-Agent: homebrew-tap-formula-update",
+                *[item for header in headers for item in ("-H", header)],
                 url,
             ],
             check=True,

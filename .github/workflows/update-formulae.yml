@@ -27,6 +27,8 @@ jobs:
           python-version: "3.x"
 
       - name: Update formulae from latest releases
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         run: python3 scripts/update_formulae.py --latest
 
       - name: Validate formula style
