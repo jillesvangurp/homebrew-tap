@@ -4,23 +4,24 @@ Homebrew tap for installing CLI tools published by Jilles van Gurp.
 
 ## Install
 
-Tap this repository:
+Tap this repository using its full GitHub repo name:
 
 ```bash
-brew tap jillesvangurp/tap https://github.com/jillesvangurp/homebrew-tap
+brew tap jillesvangurp/homebrew-tap https://github.com/jillesvangurp/homebrew-tap
 ```
 
 Then install a formula, for example `ktsearch`:
 
 ```bash
-brew install ktsearch
+brew install jillesvangurp/homebrew-tap/ktsearch
 ```
 
 Bash and Zsh completions are installed automatically.
 
-You can also install it in one step without tapping first:
+If you prefer Homebrew's GitHub shorthand, the equivalent tap name is `jillesvangurp/tap`:
 
 ```bash
+brew tap jillesvangurp/tap
 brew install jillesvangurp/tap/ktsearch
 ```
 
