@@ -145,17 +145,102 @@ def filename_regex(template: str) -> str:
     return escaped.replace(re.escape("{version}"), r'[^"]+')
 
 
+def render_managed_stable_section(formula_name: str, version: str, assets: dict[str, dict[str, str]]) -> str:
+    supported = []
+    if "darwin-arm64" in assets:
+        supported.append("macOS arm64")
+    if "darwin-amd64" in assets:
+        supported.append("macOS amd64")
+    if "linux-arm64" in assets:
+        supported.append("Linux arm64")
+    if "linux-amd64" in assets:
+        supported.append("Linux amd64")
+
+    odie_message = f'{formula_name} currently publishes Homebrew binaries for {", ".join(supported)} only'
+
+    lines = [f'  version "{version}"', ""]
+
+    if "darwin-arm64" in assets or "darwin-amd64" in assets:
+        lines.append("  on_macos do")
+        if "darwin-arm64" in assets:
+            lines.append("    if Hardware::CPU.arm?")
+            lines.append(f'      url "{assets["darwin-arm64"]["url"]}"')
+            lines.append(f'      sha256 "{assets["darwin-arm64"]["sha256"]}"')
+            if "darwin-amd64" in assets:
+                lines.append("    else")
+                lines.append(f'      url "{assets["darwin-amd64"]["url"]}"')
+                lines.append(f'      sha256 "{assets["darwin-amd64"]["sha256"]}"')
+            else:
+                lines.append("    else")
+                lines.append(f'      odie "{odie_message}"')
+            lines.append("    end")
+        elif "darwin-amd64" in assets:
+            lines.append("    if Hardware::CPU.intel?")
+            lines.append(f'      url "{assets["darwin-amd64"]["url"]}"')
+            lines.append(f'      sha256 "{assets["darwin-amd64"]["sha256"]}"')
+            lines.append("    else")
+            lines.append(f'      odie "{odie_message}"')
+            lines.append("    end")
+        lines.extend(["  end", ""])
+
+    if "linux-arm64" in assets or "linux-amd64" in assets:
+        lines.append("  on_linux do")
+        if "linux-arm64" in assets:
+            lines.append("    if Hardware::CPU.arm?")
+            lines.append(f'      url "{assets["linux-arm64"]["url"]}"')
+            lines.append(f'      sha256 "{assets["linux-arm64"]["sha256"]}"')
+            if "linux-amd64" in assets:
+                lines.append("    elsif Hardware::CPU.intel?")
+                lines.append(f'      url "{assets["linux-amd64"]["url"]}"')
+                lines.append(f'      sha256 "{assets["linux-amd64"]["sha256"]}"')
+                lines.append("    else")
+                lines.append(f'      odie "{odie_message}"')
+            else:
+                lines.append("    else")
+                lines.append(f'      odie "{odie_message}"')
+            lines.append("    end")
+        elif "linux-amd64" in assets:
+            lines.append("    if Hardware::CPU.intel?")
+            lines.append(f'      url "{assets["linux-amd64"]["url"]}"')
+            lines.append(f'      sha256 "{assets["linux-amd64"]["sha256"]}"')
+            lines.append("    else")
+            lines.append(f'      odie "{odie_message}"')
+            lines.append("    end")
+        lines.append("  end")
+
+    return "\n".join(lines).rstrip()
+
+
+def update_managed_stable_block(
+    text: str, formula_name: str, version: str, assets: dict[str, dict[str, str]]
+) -> str:
+    pattern = re.compile(
+        r"(^\s*# STABLE-BEGIN\s*$)(.*?)(^\s*# STABLE-END\s*$)",
+        flags=re.MULTILINE | re.DOTALL,
+    )
+    match = pattern.search(text)
+    if not match:
+        return text
+
+    managed = render_managed_stable_section(formula_name, version, assets)
+    replacement = f"{match.group(1)}\n{managed}\n\n{match.group(3)}"
+    return pattern.sub(replacement, text, count=1)
+
+
 def update_formula(formula_path: Path, version: str, assets: dict[str, dict[str, str]], templates: dict[str, str]) -> tuple[str, str]:
     original = formula_path.read_text()
-    updated = replace_once(original, r'^\s*version "[^"]+"$', f'  version "{version}"')
+    updated = update_managed_stable_block(original, formula_path.stem, version, assets)
 
-    for platform, template in templates.items():
-        pattern = (
-            rf'^\s*url "https://github\.com/[^/]+/[^/]+/releases/download/[^"]+/{filename_regex(template)}"\n'
-            rf'\s*sha256 "[0-9a-f]{{64}}"$'
-        )
-        replacement = f'      url "{assets[platform]["url"]}"\n      sha256 "{assets[platform]["sha256"]}"'
-        updated = replace_once(updated, pattern, replacement)
+    if updated == original:
+        updated = replace_once(original, r'^\s*version "[^"]+"$', f'  version "{version}"')
+
+        for platform, template in templates.items():
+            pattern = (
+                rf'^\s*url "https://github\.com/[^/]+/[^/]+/releases/download/[^"]+/{filename_regex(template)}"\n'
+                rf'\s*sha256 "[0-9a-f]{{64}}"$'
+            )
+            replacement = f'      url "{assets[platform]["url"]}"\n      sha256 "{assets[platform]["sha256"]}"'
+            updated = replace_once(updated, pattern, replacement)
 
     if updated != original:
         formula_path.write_text(updated)
@@ -163,11 +248,9 @@ def update_formula(formula_path: Path, version: str, assets: dict[str, dict[str,
     return original, updated
 
 
-def extract_version(formula_text: str) -> str:
+def extract_version(formula_text: str) -> str | None:
     match = re.search(r'^\s*version "([^"]+)"$', formula_text, flags=re.MULTILINE)
-    if not match:
-        raise SystemExit("Could not find version in formula")
-    return match.group(1)
+    return match.group(1) if match else None
 
 
 def update_one(tap_repo: Path, config: dict, tag: str | None, latest: bool) -> tuple[str, str, str]:
@@ -178,8 +261,8 @@ def update_one(tap_repo: Path, config: dict, tag: str | None, latest: bool) -> t
     release = fetch_json(release_url(config["source_repo"], tag, latest))
     version, assets = collect_assets(release, config["asset_templates"])
     original_text, updated_text = update_formula(formula_path, version, assets, config["asset_templates"])
-    old_version = extract_version(original_text)
-    new_version = extract_version(updated_text)
+    old_version = extract_version(original_text) or "(no stable version)"
+    new_version = extract_version(updated_text) or "(no stable version)"
 
     print(f"Checked {config['formula']} ({formula_path})")
     print(f"Version: {old_version} -> {new_version}")

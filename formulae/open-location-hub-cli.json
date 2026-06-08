@@ -1,0 +1,11 @@
+{
+  "formula": "open-location-hub-cli",
+  "source_repo": "Open-Location-Stack/open-location-hub-cli",
+  "formula_path": "Formula/open-location-hub-cli.rb",
+  "asset_templates": {
+    "darwin-arm64": "olh-darwin-arm64-{version}.tar.gz",
+    "darwin-amd64": "olh-darwin-amd64-{version}.tar.gz",
+    "linux-arm64": "olh-linux-arm64-{version}.tar.gz",
+    "linux-amd64": "olh-linux-amd64-{version}.tar.gz"
+  }
+}
