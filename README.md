@@ -10,10 +10,11 @@ Tap this repository using its full GitHub repo name:
 brew tap jillesvangurp/homebrew-tap https://github.com/jillesvangurp/homebrew-tap
 ```
 
-Then install a formula, for example `ktsearch`:
+Then install a formula:
 
 ```bash
 brew install jillesvangurp/homebrew-tap/ktsearch
+brew install jillesvangurp/homebrew-tap/open-location-hub-cli
 ```
 
 Bash and Zsh completions are installed automatically.
@@ -23,6 +24,7 @@ If you prefer Homebrew's GitHub shorthand, the equivalent tap name is `jillesvan
 ```bash
 brew tap jillesvangurp/tap
 brew install jillesvangurp/tap/ktsearch
+brew install jillesvangurp/tap/open-location-hub-cli
 ```
 
 Additional formulae can be added later under [`Formula/`](/Users/jillesvangurp/git/homebrew-tap/Formula) without changing how users tap the repository.
@@ -30,6 +32,7 @@ Additional formulae can be added later under [`Formula/`](/Users/jillesvangurp/g
 ## Current formulae
 
 - `ktsearch`
+- `open-location-hub-cli`
 
 ## Formula updates
 
