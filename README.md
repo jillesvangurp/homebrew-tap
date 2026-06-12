@@ -4,27 +4,38 @@ Homebrew tap for installing CLI tools published by Jilles van Gurp.
 
 ## Install
 
-Tap this repository using its full GitHub repo name:
+On Homebrew 6.0.0 and newer, direct formula installs are the simplest path because
+Homebrew trusts only the formula being installed:
+
+```bash
+brew install jillesvangurp/tap/ktsearch
+brew install jillesvangurp/tap/open-location-hub-cli
+```
+
+To install by short name, tap this repository and trust either the specific formulae
+or the whole tap first:
 
 ```bash
 brew tap jillesvangurp/homebrew-tap https://github.com/jillesvangurp/homebrew-tap
+brew trust --formula jillesvangurp/tap/ktsearch
+brew trust --formula jillesvangurp/tap/open-location-hub-cli
 ```
 
-Then install a formula:
+Then install a formula by short name:
 
 ```bash
-brew install jillesvangurp/homebrew-tap/ktsearch
-brew install jillesvangurp/homebrew-tap/open-location-hub-cli
+brew install ktsearch
+brew install open-location-hub-cli
 ```
 
 Bash and Zsh completions are installed automatically.
 
-If you prefer Homebrew's GitHub shorthand, the equivalent tap name is `jillesvangurp/tap`:
+If you administer or fully trust everything in this tap, you can trust the whole tap
+instead:
 
 ```bash
 brew tap jillesvangurp/tap
-brew install jillesvangurp/tap/ktsearch
-brew install jillesvangurp/tap/open-location-hub-cli
+brew trust jillesvangurp/tap
 ```
 
 Additional formulae can be added later under [`Formula/`](/Users/jillesvangurp/git/homebrew-tap/Formula) without changing how users tap the repository.

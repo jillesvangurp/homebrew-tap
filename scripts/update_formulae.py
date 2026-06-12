@@ -156,9 +156,13 @@ def render_managed_stable_section(formula_name: str, version: str, assets: dict[
     if "linux-amd64" in assets:
         supported.append("Linux amd64")
 
-    odie_message = f'{formula_name} currently publishes Homebrew binaries for {", ".join(supported)} only'
+    def append_odie(lines: list[str], indent: str) -> None:
+        prefix = f"{formula_name} currently publishes Homebrew binaries "
+        suffix = f'for {", ".join(supported)} only'
+        lines.append(f'{indent}odie "{prefix}" \\')
+        lines.append(f'{indent}     "{suffix}"')
 
-    lines = [f'  version "{version}"', ""]
+    lines = []
 
     if "darwin-arm64" in assets or "darwin-amd64" in assets:
         lines.append("  on_macos do")
@@ -172,14 +176,14 @@ def render_managed_stable_section(formula_name: str, version: str, assets: dict[
                 lines.append(f'      sha256 "{assets["darwin-amd64"]["sha256"]}"')
             else:
                 lines.append("    else")
-                lines.append(f'      odie "{odie_message}"')
+                append_odie(lines, "      ")
             lines.append("    end")
         elif "darwin-amd64" in assets:
             lines.append("    if Hardware::CPU.intel?")
             lines.append(f'      url "{assets["darwin-amd64"]["url"]}"')
             lines.append(f'      sha256 "{assets["darwin-amd64"]["sha256"]}"')
             lines.append("    else")
-            lines.append(f'      odie "{odie_message}"')
+            append_odie(lines, "      ")
             lines.append("    end")
         lines.extend(["  end", ""])
 
@@ -194,17 +198,17 @@ def render_managed_stable_section(formula_name: str, version: str, assets: dict[
                 lines.append(f'      url "{assets["linux-amd64"]["url"]}"')
                 lines.append(f'      sha256 "{assets["linux-amd64"]["sha256"]}"')
                 lines.append("    else")
-                lines.append(f'      odie "{odie_message}"')
+                append_odie(lines, "      ")
             else:
                 lines.append("    else")
-                lines.append(f'      odie "{odie_message}"')
+                append_odie(lines, "      ")
             lines.append("    end")
         elif "linux-amd64" in assets:
             lines.append("    if Hardware::CPU.intel?")
             lines.append(f'      url "{assets["linux-amd64"]["url"]}"')
             lines.append(f'      sha256 "{assets["linux-amd64"]["sha256"]}"')
             lines.append("    else")
-            lines.append(f'      odie "{odie_message}"')
+            append_odie(lines, "      ")
             lines.append("    end")
         lines.append("  end")
 
@@ -215,7 +219,7 @@ def update_managed_stable_block(
     text: str, formula_name: str, version: str, assets: dict[str, dict[str, str]]
 ) -> str:
     pattern = re.compile(
-        r"(^\s*# STABLE-BEGIN\s*$)(.*?)(^\s*# STABLE-END\s*$)",
+        r"(^[ \t]*# STABLE-BEGIN[ \t]*$)(.*?)(^[ \t]*# STABLE-END[ \t]*$)",
         flags=re.MULTILINE | re.DOTALL,
     )
     match = pattern.search(text)
@@ -223,7 +227,7 @@ def update_managed_stable_block(
         return text
 
     managed = render_managed_stable_section(formula_name, version, assets)
-    replacement = f"{match.group(1)}\n{managed}\n\n{match.group(3)}"
+    replacement = f"{match.group(1)}\n{managed}\n{match.group(3)}"
     return pattern.sub(replacement, text, count=1)
 
 

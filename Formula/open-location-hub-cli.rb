@@ -1,12 +1,10 @@
 class OpenLocationHubCli < Formula
   desc "CLI for Open Location Hub"
   homepage "https://github.com/Open-Location-Stack/open-location-hub-cli"
-
-  # STABLE-BEGIN
-  version "0.1.4"
   license "MIT"
   head "https://github.com/Open-Location-Stack/open-location-hub-cli.git", branch: "main"
 
+  # STABLE-BEGIN
   on_macos do
     if Hardware::CPU.arm?
       url "https://github.com/Open-Location-Stack/open-location-hub-cli/releases/download/0.1.4/olh-darwin-arm64-0.1.4.tar.gz"
@@ -29,7 +27,6 @@ class OpenLocationHubCli < Formula
            "for macOS arm64, macOS amd64, Linux arm64, Linux amd64 only"
     end
   end
-
   # STABLE-END
 
   depends_on "go" => :build if build.head?
